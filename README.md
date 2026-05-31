@@ -1,75 +1,75 @@
 # Lora_Test1
 
-Firmware de prueba para usar un modulo LoRa E220-900 con una placa Seeed Studio XIAO ESP32S3 Sense usando ESP-IDF.
+Test firmware for using an EBYTE E220-900 LoRa module with a Seeed Studio XIAO ESP32S3 Sense board using ESP-IDF.
 
 ## Hardware
 
-- Placa: Seeed Studio XIAO ESP32S3 Sense
-- Modulo LoRa: EBYTE E220-900
+- Board: Seeed Studio XIAO ESP32S3 Sense
+- LoRa module: EBYTE E220-900
 - Framework: ESP-IDF
 
-## Conexiones
+## Wiring
 
-| Senal E220 | GPIO ESP32S3 | Pin XIAO |
-| ---------- | ------------ | -------- |
-| TXD        | GPIO44       | D7 / RX  |
-| RXD        | GPIO43       | D6 / TX  |
-| M0         | GPIO2        | D1       |
-| M1         | GPIO3        | D2       |
-| AUX        | GPIO1        | D0       |
-| VCC        | 3V3          | 3V3      |
-| GND        | GND          | GND      |
+| E220 Signal | ESP32S3 GPIO | XIAO Pin |
+| ----------- | ------------ | -------- |
+| TXD         | GPIO44       | D7 / RX  |
+| RXD         | GPIO43       | D6 / TX  |
+| M0          | GPIO2        | D1       |
+| M1          | GPIO3        | D2       |
+| AUX         | GPIO1        | D0       |
+| VCC         | 3V3          | 3V3      |
+| GND         | GND          | GND      |
 
-Nota: TXD del E220 debe ir al RX del ESP32S3, y RXD del E220 debe ir al TX del ESP32S3.
+Note: E220 TXD must be connected to ESP32S3 RX, and E220 RXD must be connected to ESP32S3 TX.
 
-## Archivos principales
+## Main Files
 
-- `main/main.c`: configura el modulo y contiene el bucle principal de prueba.
-- `components/lora_e220_900/lora_e220_900.c`: implementacion del driver basico del E220.
-- `components/lora_e220_900/include/lora_e220_900.h`: API publica del componente.
-- `components/lora_e220_900/include/lora_e220_900_defs.h`: pines, comandos, registros y enums de configuracion.
+- `main/main.c`: configures the module and contains the main test loop.
+- `components/lora_e220_900/lora_e220_900.c`: basic E220 driver implementation.
+- `components/lora_e220_900/include/lora_e220_900.h`: public component API.
+- `components/lora_e220_900/include/lora_e220_900_defs.h`: pins, commands, registers, and configuration enums.
 
-## Configuracion actual
+## Current Configuration
 
-El ejemplo inicializa el E220 con:
+The example initializes the E220 with:
 
-- Direccion: `0x0001`
-- Canal: `0x17`
-- UART del modulo: `9600 8N1`
+- Address: `0x0001`
+- Channel: `0x17`
+- Module UART: `9600 8N1`
 - Air rate: `2.4 kbps`
-- Potencia: `22 dBm`
-- Metodo de transmision: transparente
-- Clave de cifrado: `0x0000`
+- TX power: `22 dBm`
+- Transmission mode: transparent
+- Encryption key: `0x0000`
 
-La configuracion se define en `main/main.c` dentro de `app_main()`.
+The configuration is defined in `main/main.c` inside `app_main()`.
 
-## Compilar
+## Build
 
-Desde una terminal con ESP-IDF cargado:
+From a terminal with ESP-IDF loaded:
 
 ```powershell
 idf.py build
 ```
 
-## Flashear
+## Flash
 
-Reemplaza `COMx` por el puerto serial correspondiente:
+Replace `COMx` with the correct serial port:
 
 ```powershell
 idf.py -p COMx flash
 ```
 
-## Monitor serial
+## Serial Monitor
 
 ```powershell
 idf.py -p COMx monitor
 ```
 
-Para salir del monitor: `Ctrl+]`.
+Exit the monitor with `Ctrl+]`.
 
-## Uso basico de la API
+## Basic API Usage
 
-Inicializar el modulo:
+Initialize the module:
 
 ```c
 lora_e220_900_settings_t cfg = {
@@ -91,14 +91,14 @@ lora_e220_900_settings_t cfg = {
 esp_err_t ret = lora_e220_900_init(&cfg);
 ```
 
-Enviar en modo transparente:
+Send data in transparent mode:
 
 ```c
-const char *msg = "Hola desde ESP32";
+const char *msg = "Hello from ESP32";
 lora_e220_send((const uint8_t *)msg, strlen(msg));
 ```
 
-Recibir:
+Receive data:
 
 ```c
 uint8_t rx_buffer[128];
@@ -106,14 +106,17 @@ int len = lora_e220_receive(rx_buffer, sizeof(rx_buffer) - 1, 1000);
 
 if (len > 0) {
     rx_buffer[len] = '\0';
-    ESP_LOGI("MAIN", "Recibido: %s", rx_buffer);
+    ESP_LOGI("MAIN", "Received: %s", rx_buffer);
 }
 ```
 
-## Notas importantes
+## Important Notes
 
-- GPIO43 y GPIO44 corresponden a D6/TX y D7/RX en la XIAO ESP32S3 Sense.
-- Si el proyecto usa la consola de ESP-IDF por UART0, evita compartir `UART_NUM_0` con el modulo LoRa. En ese caso es recomendable usar `UART_NUM_1` con los mismos pines GPIO43/GPIO44, o configurar la consola por USB Serial/JTAG.
-- El codigo actual configura el modulo en modo transparente. Para usar `lora_e220_send_fixed()`, cambia `transmission_method` a `LORA_FIXED_MODE`.
-- Si cambias el baudrate configurado en el E220, asegúrate de actualizar tambien la configuracion UART del ESP32S3.
+- GPIO43 and GPIO44 map to D6/TX and D7/RX on the XIAO ESP32S3 Sense.
+- If the ESP-IDF console is using UART0, avoid sharing `UART_NUM_0` with the LoRa module. In that case, use `UART_NUM_1` with the same GPIO43/GPIO44 pins, or configure the console to use USB Serial/JTAG.
+- The current code configures the module in transparent mode. To use `lora_e220_send_fixed()`, change `transmission_method` to `LORA_FIXED_MODE`.
+- If you change the baud rate configured in the E220, also update the ESP32S3 UART configuration.
 
+## Project Status
+
+This project is a functional base for initializing and testing communication with the E220-900. The send/receive loop in `main/main.c` is currently commented out to make step-by-step testing easier.
